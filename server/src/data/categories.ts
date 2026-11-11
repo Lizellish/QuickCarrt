@@ -13,7 +13,7 @@ export const categories = [
   { name: "Sports", slug: "sports", icon: "fitness_center" },
   { name: "Books", slug: "books", icon: "menu_book" },
   { name: "Office", slug: "office", icon: "desk" },
-  { name: "Kitchen", slug: "kitches", icon: "soup_kitchen" },
+  { name: "Kitchen", slug: "kitchen", icon: "soup_kitchen" },
   ,
 ];
 
