@@ -30,11 +30,11 @@ cloudinary.config({
 
 // the start of every photo address . e.g "http://res.cloudinary.com/my-cloud/images/upload/f_auto, q_auto/"
 
-const PHOTO_URL_START = `http://res.cloudinary.com/${env.cloudinaryCloudName}/image/upload/f_auto, q_auto`;
+const PHOTO_URL_START = `https://res.cloudinary.com/${env.cloudinaryCloudName}/image/upload/f_auto,q_auto/`;
 
 // "quickcart/ product/ smart-watch-ultra" -> "https://res.cloudinary.com/my-cloud/image/upload/f_auto, q_auto/quickcart/products/smart-watch-ultra"
 
-export const photoUrl = (publicId: String) => {
+export const photoUrl = (publicId: string) => {
   return PHOTO_URL_START + publicId;
 };
 
@@ -101,4 +101,37 @@ export const deleteAllUploadedPhotos = async () => {
   await cloudinary.api
     .delete_resources_by_prefix(`${UPLOAD_FOLDER}/`)
     .catch(() => {});
+};
+
+// List the names (public ids) of all demo product photo on cloudinary,
+// e.g ["quickcart/product/smart-watch-ultra-1", ... ] .admin uploads are left out.
+// cloudinary sends at most 500 per page, so we keep asking for the next page untill there is none.
+// empty list when cloudinary isnt set up (the products are then saved without photos)
+
+export const listProductionPhotoIds = async (): Promise<string[]> => {
+  if (!isCloudinaryReady) {
+    return [];
+  }
+
+  const ids: string[] = [];
+  let nextCursor: string | undefined = undefined;
+
+  do {
+    const page = await cloudinary.api.resources({
+      type: "upload",
+      prefix: `${PHOTO_FOLDER}/`,
+      max_results: 500,
+      next_cursor: nextCursor,
+    });
+
+    for (const photo of page.resources ?? []) {
+      ids.push(photo.public_id);
+    }
+
+    nextCursor = page.next_cursor; // undefined on the list page, which ends the loop
+  } while (nextCursor);
+
+  return ids.filter((id) => {
+    return !id.startsWith(`${UPLOAD_FOLDER}/`);
+  });
 };
