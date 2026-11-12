@@ -14,7 +14,6 @@ export const categories = [
   { name: "Books", slug: "books", icon: "menu_book" },
   { name: "Office", slug: "office", icon: "desk" },
   { name: "Kitchen", slug: "kitchen", icon: "soup_kitchen" },
-  ,
 ];
 
 // part of the step 10 is to develop the product api ->  -> server/src/data/products.ts

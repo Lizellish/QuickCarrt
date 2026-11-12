@@ -51,7 +51,7 @@ export const makeRatingCount = (
 
 // put them in number order, and turn them  into full addresses.
 export const photosFor = (slug: string, photoIds: string[]): string[] => {
-  const prefix = `${PHOTO_FOLDER} /${slug}-`;
+  const prefix = `${PHOTO_FOLDER}/${slug}-`;
 
   return photoIds
     .filter((id) => {
@@ -99,7 +99,7 @@ const buildProduct = (
     trackStock: true,
     stock: item.stock,
     lowStockThreshold: 10,
-    images: photosFor(slug, photoIds),
+    images: photosFor(item.photo ?? slug, photoIds),
     gallery: [], // empty = the product page uses images
     colors: item.colors ?? [],
     tags: item.tags ?? [],
