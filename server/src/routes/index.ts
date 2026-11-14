@@ -1,6 +1,6 @@
 // routes/index.ts
 // Join all the files together; app.ts puts these under /api
-
+import accountRoutes from "./accountRoutes";
 import { Router } from "express";
 import categoryRoutes from "./categoryRoutes";
 
@@ -13,7 +13,7 @@ router.get("/health", (_req, res) =>
 );
 
 router.use("/categories", categoryRoutes); // /api/categories...
-
+router.use("/account", accountRoutes); // /api/account...
 router.use("/products", productRoutes); // /api/products
 export default router;
 
