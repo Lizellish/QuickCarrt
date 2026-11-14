@@ -34,6 +34,11 @@ export const env = {
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
+
+  // Brevo sends the emails (see utils/sendEmail.ts). Empty = emails are printed in the terminal instead
+  brevoApiKey: process.env.BREVO_API_KEY || "",
+  emailFrom: process.env.EMAIL_FROM || "", // must be a sender you verified in Brevo
+  emailFromName: process.env.EMAIL_FROM_NAME || "QuickCart",
 };
 
 // Note i change the mongoDB fetch code from MongoUTL to MongoURL num-16
