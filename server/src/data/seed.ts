@@ -2,10 +2,11 @@
 // fills the database with the demo data: npm run seed
 // running it again wipes the demo collections and starts fresh, so its always safe to re-run
 
+import { User } from "../models/User";
 import mongoose, { Types } from "mongoose";
 import { Category } from "../models/Category";
 import { Product } from "../models/Product";
-import { demoCategories, demoProducts } from "./demoData";
+import { demoCategories, demoProducts, demoUsers } from "./demoData";
 import { listProductionPhotoIds } from "../config/cloudinary";
 import { products } from "./product";
 import { categories } from "./categories";
@@ -19,9 +20,11 @@ import { connectDB } from "../config/database";
 export const seedDatabase = async () => {
   // 1. Empty the collections (both at the same time with Promise.all)
 
-  await Promise.all([Category.deleteMany({}), Product.deleteMany({})]);
-
-  // 2.) Save the categories, then remember each ones id by slug: "electronics" -> ObjectId(...)
+  await Promise.all([
+    Category.deleteMany({}),
+    Product.deleteMany({}),
+    User.deleteMany({}),
+  ]); // 2.) Save the categories, then remember each ones id by slug: "electronics" -> ObjectId(...)
 
   const savedCategories = await Category.insertMany(demoCategories());
   const categoryIds = new Map<string, Types.ObjectId>(
@@ -61,6 +64,9 @@ export const seedDatabase = async () => {
     });
   };
 
+  // 6. Save the demo users. User.create (NOT insertMany): only create/save runs the model's
+  // pre("save") hook, which hashes the passwords. insertMany would store them as plain text!
+  const savedUsers = await User.create(demoUsers());
   // BUlkwrite send all 40 updates to mongodb in one trip instead of 40 seperate saves
 
   await Product.bulkWrite(
@@ -79,11 +85,11 @@ export const seedDatabase = async () => {
     }),
   );
 
-  // 6. A summary for whoever ran the seed
-
+  // 7. A summary for whoever ran the seed
   return {
     categories: savedCategories.length,
     products: saveProducts.length,
+    users: savedUsers.length, // new  update
     withoutPhotos: saveProducts
       .filter((product) => {
         return product.images.length === 0;
@@ -102,9 +108,9 @@ const runSeed = async () => {
     await connectDB();
     const result = await seedDatabase();
 
-    console.log(
-      `seeded ${result.categories} categories and ${result.products} products`,
-    );
+    console.log(`
+     Seeded ${result.categories} categories, ${result.products} products and ${result.users} users,
+   `);
 
     if (result.withoutPhotos.length > 0) {
       console.log(
