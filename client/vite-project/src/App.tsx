@@ -29,7 +29,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
-
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 function App() {
   return (
     <>
@@ -53,6 +53,7 @@ function App() {
             <Route>
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/checkout" element={<CheckOutPage />} />
+              <Route element={<ProtectedRoute />}> </Route>
               <Route
                 path="/order-confirmation/:orderId"
                 element={<OrderConfirmationPages />}
@@ -101,6 +102,8 @@ function App() {
               <Route path="categories" element={<AdminCategoriesPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="customer" element={<AdminCustomerPage />} />
+              {/* Admin pages: ... Only admins gets in. */}
+              <Route element={<ProtectedRoute adminOnly />}> </Route>
 
               {/* Any other admin address shows the 404 page inside the admin layout */}
               <Route path="*" element={<NotFoundPage />} />

@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Footer from "../components/Layout/Footer";
 import Navbar from "../components/Layout/Navbar";
-
+import AddedToCartModal from "../components/product/AddedToCartModal";
 const MainLayout = () => {
   return (
     <>
@@ -10,6 +10,7 @@ const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <AddedToCartModal />
     </>
   );
 };
