@@ -1,73 +1,103 @@
 // seed.ts
-// fills the database with the demo data: npm run seed
-// running it again wipes the demo collections and starts fresh, so its always safe to re-run
+// Fills the database with demo data: npm run seed
+// Running it again wipes the demo collections and starts fresh.
 
-import { User } from "../models/User";
 import mongoose, { Types } from "mongoose";
 import { Category } from "../models/Category";
 import { Product } from "../models/Product";
+import { User } from "../models/User";
+import { PromoCode } from "../models/PromoCode";
 import { demoCategories, demoProducts, demoUsers } from "./demoData";
+import { promoCodes } from "./promoCodes";
 import { listProductionPhotoIds } from "../config/cloudinary";
 import { products } from "./product";
 import { categories } from "./categories";
 import { connectDB } from "../config/database";
+import { Order } from "../models/Order";
+import { Counter } from "../models/Counter";
+import { Review } from "../models/Review";
+import { createDemoOrders, demoShoppers } from "./demoOrders";
 
-// Step: 13 : The seed command
+// Step 13: The seed command
 
-// SeedDatabase() does the work and it exported, so the demo panel can re-use it.
-// The bottom of the file runs it only when ypu type npm run seed.
+// seedDatabase() does the work and is exported,
+// so the demo panel can reuse it.
 
 export const seedDatabase = async () => {
-  // 1. Empty the collections (both at the same time with Promise.all)
+  // 1. Empty the collections.
 
   await Promise.all([
     Category.deleteMany({}),
     Product.deleteMany({}),
     User.deleteMany({}),
-  ]); // 2.) Save the categories, then remember each ones id by slug: "electronics" -> ObjectId(...)
+    PromoCode.deleteMany({}),
+    Order.deleteMany({}),
+    PromoCode.deleteMany({}),
+    Counter.deleteMany({}),
+  ]);
+
+  // 2. Save categories and remember each ID by slug.
+
+  console.log("ACTUAL CATEGORY DATA:", JSON.stringify(categories, null, 2));
+  console.log("TOTAL CATEGORIES:", categories.length);
 
   const savedCategories = await Category.insertMany(demoCategories());
+
   const categoryIds = new Map<string, Types.ObjectId>(
     savedCategories.map((category) => {
       return [category.slug, category._id];
     }),
   );
 
-  // 3. Which photos are on cloudinary?
+  // 3. Get the available Cloudinary photos.
 
   const photoIds = await listProductionPhotoIds();
 
-  // 4.) Save the products
-  const saveProducts = await Product.insertMany(
+  console.log("TOTAL CLOUDINARY PHOTOS:", photoIds.length);
+  console.log(
+    "SNEAKER PHOTOS:",
+    photoIds.filter((id) => id.includes("canvas-low-top-sneakers")),
+  );
+  console.log(
+    "DESK LAMP PHOTOS:",
+    photoIds.filter((id) => id.includes("minimalist-led-desk-lamp")),
+  );
+  console.log(
+    "CAST IRON MATCH:",
+    photoIds.filter((id) => id.includes("cast-iron-skillet-10-inch")),
+  );
+
+  // 4. Save products.
+
+  const savedProducts = await Product.insertMany(
     demoProducts(categoryIds, photoIds),
   );
 
-  // 5. Link bundles and related products. products.ts uses names; we swap each name for its id.
+  // 5. Link bundles and related products.
+
   const productIds = new Map<string, Types.ObjectId>(
-    saveProducts.map((product) => {
+    savedProducts.map((product) => {
       return [product.name, product._id];
     }),
   );
 
-  // ["Gold-plated 3.5mm AUX Cable", ...] -> [ObjectId(...)....]
-  // A misspelt name stops the seed with a clear message instead of silentyly dropping the link
+  // Convert product names into MongoDB ObjectIds.
 
-  const idsFor = (names: string[] | undefined, owener: string) => {
+  const idsFor = (names: string[] | undefined, owner: string) => {
     return (names ?? []).map((name) => {
       const id = productIds.get(name);
+
       if (!id) {
         throw new Error(
-          `"${owener}" link to a product that dosent exist: "${name}"`,
+          `"${owner}" links to a product that doesn't exist: "${name}"`,
         );
       }
+
       return id;
     });
   };
 
-  // 6. Save the demo users. User.create (NOT insertMany): only create/save runs the model's
-  // pre("save") hook, which hashes the passwords. insertMany would store them as plain text!
-  const savedUsers = await User.create(demoUsers());
-  // BUlkwrite send all 40 updates to mongodb in one trip instead of 40 seperate saves
+  // Update bundles and related products in one bulk operation.
 
   await Product.bulkWrite(
     products.map((item) => {
@@ -76,7 +106,7 @@ export const seedDatabase = async () => {
           filter: { _id: productIds.get(item.name) },
           update: {
             $set: {
-              boundleProducts: idsFor(item.bundle, item.name),
+              bundleProducts: idsFor(item.bundle, item.name),
               relatedProducts: idsFor(item.related, item.name),
             },
           },
@@ -85,32 +115,45 @@ export const seedDatabase = async () => {
     }),
   );
 
-  // 7. A summary for whoever ran the seed
+  // 6. Save the demo users.
+  // User.create (NOT insertMany): only create/save runs the model's
+  // pre("save") hook, which hashes the passwords.
+
+  const savedUsers = await User.create(demoUsers());
+
+  // 7. Save the promo codes (insertMany is fine here: promo codes have no save hooks)
+
+  const savedPromoCodes = await PromoCode.insertMany(promoCodes);
+
+  // 8. Demo orders (STEP 28): 4 more shoppers and ~40 orders, so the dashboard and Order History have data
+
+  const demoOrderCount = await createDemoOrders(savedProducts);
+
+  // 9. A summary for whoever ran the seed.
+
   return {
     categories: savedCategories.length,
-    products: saveProducts.length,
-    users: savedUsers.length, // new  update
-    withoutPhotos: saveProducts
-      .filter((product) => {
-        return product.images.length === 0;
-      })
-
-      .map((product) => {
-        return product.name;
-      }),
+    products: savedProducts.length,
+    users: savedUsers.length + demoShoppers.length,
+    promoCodes: savedPromoCodes.length,
+    orders: demoOrderCount,
+    withoutPhotos: savedProducts
+      .filter((product) => product.images.length === 0)
+      .map((product) => product.name),
   };
 };
 
-// Runs when you type "npm run seed": connect, seed, report, disconnected
+// Runs when you type npm run seed.
 
 const runSeed = async () => {
   try {
     await connectDB();
+
     const result = await seedDatabase();
 
-    console.log(`
-     Seeded ${result.categories} categories, ${result.products} products and ${result.users} users,
-   `);
+    console.log(
+      `Seeded ${result.categories} categories, ${result.products} products, ${result.users} users, ${result.promoCodes} promo codes and ${result.orders} demo orders`,
+    );
 
     if (result.withoutPhotos.length > 0) {
       console.log(
@@ -119,15 +162,18 @@ const runSeed = async () => {
       );
     }
   } catch (error) {
-    console.error("Seed failed: ", (error as Error).message);
-    process.exitCode = 1; // tells the terminal it failed, without cutting of the discconect below
+    console.error(
+      "Seed failed:",
+      error instanceof Error ? error.message : error,
+    );
+
+    process.exitCode = 1;
   } finally {
-    await mongoose.disconnect(); // without this the command whould hang and never finish
+    await mongoose.disconnect();
   }
 };
 
-// "requir.main === module" is true only when this file is run directly (npm run seed)
-// not when other file imports seedDatabase (the demo panel). so importing never re-seeds by accident
+// Run only when this file is executed directly.
 
 if (require.main === module) {
   runSeed();
