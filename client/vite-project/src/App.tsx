@@ -42,12 +42,18 @@ function App() {
             <Route path="/" element={<Homeoage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/product/:id" element={<ProductDetailsPage />} />
+            <Route
+              path="/product/:productId"
+              element={<ProductDetailsPage />}
+            />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPages />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
+            />
 
             {/* Pages that need authentication to access (Users with account) */}
             <Route>

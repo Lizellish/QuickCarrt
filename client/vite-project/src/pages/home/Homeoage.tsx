@@ -9,7 +9,7 @@ import RecommendedForYou from "../../components/Home/RecommendedForYou";
 import Testimonials from "../../components/Home/Testimonials";
 import TodaysDeal from "../../components/Home/TodaysDeal";
 import TrustBar from "../../components/Home/TrustBar";
-
+import RecentlyViewed from "../../components/Home/RecentlyViewed";
 const HomePage = () => {
   return (
     <div className="mx-auto flex max-w-360 flex-col gap-10 px-4 pt-10 pb-20 md:px-12">
@@ -23,6 +23,7 @@ const HomePage = () => {
       <BestSeller />
       <NewArrival />
       <RecommendedForYou />
+      <RecentlyViewed />
       <Testimonials />
       <NewsletterBanner />
     </div>

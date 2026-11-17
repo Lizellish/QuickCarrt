@@ -4,9 +4,8 @@
 // The values come from AuthProvider.tsx, which wraps the whole app in main.tsx.
 
 // STEP 31 (part 1): The auth context
-
+import type { AuthResponse, User } from "../types/api";
 import { createContext, useContext } from "react";
-import type { User } from "../types/api";
 
 // What the register form sends (server: authController.ts -> register)
 export type RegisterData = {
@@ -29,7 +28,11 @@ export type AuthContextValue = {
   ) => Promise<User>;
   register: (data: RegisterData) => Promise<User>;
   logout: () => void;
-  setUser: (user: User) => void; // after the profile changes (STEP 39), show the new name everywhere
+  setUser: (user: User) => void;
+
+  startSession: (auth: AuthResponse) => User; // log in with a token the server just gave (reset password, STEP 37)
+
+  // after the profile changes (STEP 39), show the new name everywhere
 };
 
 // null until AuthProvider gives it a value
