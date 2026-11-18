@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/servers.js",
+    "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/data/seed.ts",
     "upload-images": "tsx src/data/uploadImages.ts"
